@@ -1,0 +1,9 @@
+{
+    "name": "Movable Chests",
+    "author": "crowtime",
+    "version": "1.0.0",
+    "description": "Move chests with items still inside",
+    "minInstallerVersion": "0.15.5",
+    "manifestVersion": 1,
+    "requires_hooks": ["resource.node_modifier"]
+}
