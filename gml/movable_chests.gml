@@ -20,8 +20,8 @@ function __movable_chests_register_callbacks() {
 
 // hook callback
 function movable_chests_mod_node_modifier(_value, _ctx) {
-    mmapi_log_info("movable_chests", "hello mistria");
-    mmapi_log_flush("movable_chests");
+    // mmapi_log_info("movable_chests", "hello mistria");
+    // mmapi_log_flush("movable_chests");
     // var is_rug_pick = false;
     // var inst_index = undefined;
     // var object_id = undefined;
