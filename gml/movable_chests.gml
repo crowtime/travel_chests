@@ -7,7 +7,7 @@ function __movable_chests_runtime() {
 }
 
 // hook callback registration
-function __movable_chests_register_callbacks() {
+function movable_chests_register_callbacks() {
     var _rt = __movable_chests_runtime();
     if (_rt.registered_hooks != undefined) return;
     _rt.registered_hooks = true;
@@ -91,4 +91,4 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 
 // MMAPI mod declaration + hook registration
 mmapi_mod_declare("movable_chests", "1.0.0");
-my_first_mod_register_callbacks();
+movable_chests_register_callbacks();
