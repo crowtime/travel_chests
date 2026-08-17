@@ -44,10 +44,13 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
                     is_rug_pick = true;
                     object_id = undefined; // don't care anymore if it's a rug
                 } else {
+                    mmapi_log_info("movable_chests", "found: " + string(found));
+                    mmapi_log_flush("movable_chests");
+
                     object_id = _ctx.grid.node_object_id[inst_index];
 
                     x = _ctx.x + xx;
-                    y = _ctx.y + yy
+                    y = _ctx.y + yy;
                 }
                 break;
             }
@@ -55,27 +58,14 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
     }
 
     if object_id != undefined {
-        mmapi_log_info("movable_chests", "obj: " + string(object_id));
-        mmapi_log_flush("movable_chests");
-        var category = object_id_to_object_category(object_id)
-        
-        if category.prototype.interaction_chest != undefined {
-            mmapi_log_info("movable_chests", "category: " + string(category));
-            mmapi_log_flush("movable_chests");
+        var category = object_id_to_object_category(object_id);
 
-            mmapi_log_info("movable_chests", "inventory: " + string(category.inventory));
-            mmapi_log_flush("movable_chests");
+        // if it is furniture that is a chest, grab the node's inventory
+        if category == ObjectCategory.Furniture && NODE_PROTOTYPES[object_id].interaction_chest != undefined {
+            var node = _ctx.grid.node_parent[inst_index];
+            var inventory = node.inventory;
+
         }
-
-        // for (var i = 0; i < array_length(object_id.tags); i++) {
-        //     if(object_id.tags[i] == "chest_and_storage"){
-        //         is_chest = true
-        //     }
-        // }
-
-        // if (is_chest && object_id.destructable == true) {
-
-        // }
     }
     return undefined;
 }
