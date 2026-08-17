@@ -7,7 +7,7 @@ function __movable_chests_runtime() {
 }
 
 // hook callback registration
-function __movable_chests_register_callbacks() {
+function movable_chests_register_callbacks() {
     var _rt = __movable_chests_runtime();
     if (_rt.registered_hooks != undefined) return;
     _rt.registered_hooks = true;
@@ -19,7 +19,9 @@ function __movable_chests_register_callbacks() {
 }
 
 // hook callback
-function movable_chests_mod_node_modifier(_ctx) {
+function movable_chests_mod_node_modifier(_value, _ctx) {
+    mmapi_log_info("movable_chests", "hello mistria");
+    mmapi_log_flush("movable_chests");
     var is_rug_pick = false;
     var inst_index = undefined;
     var object_id = undefined;
@@ -55,21 +57,13 @@ function movable_chests_mod_node_modifier(_ctx) {
     if object_id != undefined {
         mmapi_log_info("movable_chests", "obj: " + string(object_id));
         mmapi_log_flush("movable_chests");
-
-        var input_rotation = 0;
-
-        for (var i = 0, l = array_length(NODE_PROTOTYPES[object_id].cardinals); i < l; i++) {
-            var rot = NODE_PROTOTYPES[object_id].cardinals[i];
-            if rot == obj.cardinal_index {
-                input_rotation = i;
-                break;
-            }
-        }
-
-        node = self.write_node(x, y, object_id, input_rotation);
+        var category = object_id_to_object_category(object_id)
         
-        if (node != undefined && node.prototype.interaction_chest != undefined) {
-            mmapi_log_info("movable_chests", "inventory: " + string(node.inventory));
+        if category.prototype.interaction_chest != undefined {
+            mmapi_log_info("movable_chests", "category: " + string(category));
+            mmapi_log_flush("movable_chests");
+
+            mmapi_log_info("movable_chests", "inventory: " + string(category.inventory));
             mmapi_log_flush("movable_chests");
         }
 
@@ -83,9 +77,10 @@ function movable_chests_mod_node_modifier(_ctx) {
 
         // }
     }
+    return undefined;
 }
 
 
 // MMAPI mod declaration + hook registration
 mmapi_mod_declare("movable_chests", "1.0.0");
-my_first_mod_register_callbacks();
+movable_chests_register_callbacks();
