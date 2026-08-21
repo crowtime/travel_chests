@@ -20,7 +20,7 @@ function movable_chests_register_callbacks() {
     // event hook registration. fires at the top of give_item()
     mmapi_filter("items.give", movable_chests_mod_give);
 
-    guard hook registration. fires at top of write_furniture_to_location()
+    // guard hook registration. fires at top of write_furniture_to_location()
     mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard); 
 }
 
@@ -117,11 +117,60 @@ function movable_chests_mod_give(_value, _ctx) {
 }
 
 function movable_chests_mod_place_guard(_ctx) {
-    if (_ctx.proto.tags.contains("chest_and_storage")) {
-        var item = ari.held_item();
-        mmapi_log_info("movable_chests", "ari inner_item: " + string(item.inner_item));
-        mmapi_log_flush("movable_chests");
+    // if the held item is an interaction_chest with an inner_item, it's a travel chest
+    if (_ctx.proto.tags.interaction_chest != undefined && _ctx.stack_count == 0) {
+        var item = global.__ari.held_item();
+
+        if (item.inner_item != undefined) {
+            var xx = _ctx.x;
+            var yy = _ctx.y
+
+            var calc_rot = furniture_rotation_amount(_ctx.rotation, _ctx.proto);
+
+            var rotation_matrix = furniture_calc_rot_to_rotation_matrix(calc_rot, _ctx.proto);
+
+            var region = furniture_size(rotation_matrix, _ctx.proto);
+            if local_pos_is_valid(grid, xx, yy, region) == false {
+                return undefined;
+            }
+            
+            var rot_data = furniture_mask_prep_vecdata(_ctx.proto.size, rotation_matrix);
+
+            var node = create_parent_object_node(_ctx.proto, xx, yy, region);
+            node.cardinal_index = calc_rot;
+            node.destructable =  _ctx.proto.destructable;
+            node.on = false;
+
+            for (var i = 0; i < _ctx.proto.size.x; i++) {
+                for (var j = 0; j < _ctx.proto.size.y; j++) {
+                    rot_data.offset.set_val(i - rot_data.center.x, j - rot_data.center.y);
+                    rot_data.offset.set_rotate(rotation_matrix);
+                    var posx = xx + abs(rot_data.transform.x) + rot_data.offset.x;
+                    var posy = yy + abs(rot_data.transform.y) + rot_data.offset.y;
+                    var this_cell_node = grid.try_node_index_for_cell(posx, posy);
+
+                    write_object_inst_node(grid, this_cell_node, node);
+                    set_collision_grid_flag_on_node(grid, _ctx.proto.collision_grid[# i, j], posx, posy);
+                }
+            }
+
+
+            if node.prototype.interaction_chest != undefined {
+                node.inventory = item.inner_item;
+                node.chest_icon = undefined;
+
+                if node.prototype.interaction_chest.allow_soulbound == false {
+                    node.inventory.slots.for_each(function(slot) {
+                        slot.allow_soulbound = false;
+                    });
+                };
+            }
+
+            return 0;
+        }
     }
+
+    return undefined;
 }
 
 // MMAPI mod declaration + hook registration
