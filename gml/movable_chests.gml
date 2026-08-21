@@ -1,3 +1,12 @@
+#macro CURR_CHEST global.__curr_chest
+global.__my_travel_chests = List();
+
+function __TravelChest(item_id, inventory, picked_up) {
+    self.item_id = item_id;
+    self.inventory = inventory;
+    self. picked_up = picked_up;
+}
+
 // runtime state initialization
 function __movable_chests_runtime() {
     if (global[$ "__movable_chests"] == undefined) {
@@ -14,6 +23,13 @@ function movable_chests_register_callbacks() {
 
     // filter hook registration. fires at top of pick_node()
     mmapi_filter("resource.node_modifier", movable_chests_mod_node_modifier); 
+
+    // event hook registration. fires at the top of give_item()
+    mmapi_filter("items.give", movable_chests_mod_give);
+
+    // event hook registration. fires at the top of drop_item()
+    mmapi_on("items.dropped", movable_chests_mod_drop);
+
     // guard hook registration. fires at top of write_furniture_to_location()
     //mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard); 
 }
@@ -26,8 +42,6 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
     var inst_index = undefined;
     var object_id = undefined;
     var breaker = false;
-    var x;
-    var y;
 
     for (var xx = 0; xx < 2; xx++) {
         if breaker {
@@ -48,9 +62,6 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
                     mmapi_log_flush("movable_chests");
 
                     object_id = _ctx.grid.node_object_id[inst_index];
-
-                    x = _ctx.x + xx;
-                    y = _ctx.y + yy;
                 }
                 break;
             }
@@ -61,15 +72,69 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
         var category = object_id_to_object_category(object_id);
 
         // if it is furniture that is a chest, grab the node's inventory
-        if category == ObjectCategory.Furniture && NODE_PROTOTYPES[object_id].interaction_chest != undefined {
+        if (category == ObjectCategory.Furniture && NODE_PROTOTYPES[object_id].interaction_chest != undefined) {
+            mmapi_log_info("movable_chests", "chest broken!");
+            mmapi_log_flush("movable_chests");
+
             var node = _ctx.grid.node_parent[inst_index];
             var inventory = node.inventory;
 
+            if inventory != undefined{
+                global.__my_travel_chests.add(new __TravelChest(find_item_prototype(object_id).item_id, inventory, false));
+                var curr = array_length(global.__my_travel_chests) - 1;
+                mmapi_log_info("movable_chests", "item: " + string(global.__my_travel_chests[curr].item_id) 
+                    + " inventory: " + string(global.__my_travel_chests[curr].inventory) + " picked up? " 
+                    + string(global.__my_travel_chests[curr].picked_up));
+                mmapi_log_flush("movable_chests");
+            }
         }
     }
     return undefined;
 }
 
+
+function movable_chests_mod_give(_value, _ctx){
+    if (_value == undefined) return undefined;
+    var item = _value.item;
+    item = is_struct(item) ? item : new LiveItem(item);
+
+    // if it's a chest, check if it's currently a travel chest,
+    // because we don't want to iterate through the list unless we *have* to
+    if (item.prototype.tags.contains("chest_and_storage")) {
+        for (var i = 0; i < array_length(global.__my_travel_chests); i++) {
+            if (global.__my_travel_chests[i].picked_up == false && global.__my_travel_chests[i].item_id == item.item_id) {
+                mmapi_log_info("movable_chests", "it is a travel chest!");
+                mmapi_log_flush("movable_chests");
+
+                mmapi_log_info("movable_chests", "inventory: " + string(item.inner_item.inventory));
+                mmapi_log_flush("movable_chests");
+
+                mmapi_log_info("movable_chests", "item: " + string(item.inner_item));
+                mmapi_log_flush("movable_chests");
+                
+                var can_fit = self.inventory.room_for_item(item);
+                var should_drop = max(count - can_fit, 0);
+                if should_drop > 0 {
+                    return undefined;
+                }
+                
+                // global.__my_travel_chests[i].picked_up = true;
+
+                // top ten things i really really don't wanna do is below
+                // item.prototype.tags.push("hello...");
+            }
+        }
+    }
+
+    
+    
+    return undefined;
+}
+
+// function movable_chests_mod_drop(_ctx){
+//     mmapi_log_info("movable_chests", "dropping");
+//     mmapi_log_flush("movable_chests");
+// }
 
 // MMAPI mod declaration + hook registration
 mmapi_mod_declare("movable_chests", "1.0.0");
