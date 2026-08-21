@@ -1,11 +1,11 @@
-#macro MY_TRAVEL_CHESTS global.__my_travel_chests
-global.__my_travel_chests = ds_list_create();
+// #macro MY_TRAVEL_CHESTS global.__my_travel_chests
+// global.__my_travel_chests = ds_list_create();
 
-function __TravelChest(item_id, inventory, picked_up) constructor {
-    self.item_id = item_id;
-    self.inventory = inventory;
-    self. picked_up = picked_up;
-}
+// function __TravelChest(item_id, inventory, picked_up) constructor {
+//     self.item_id = item_id;
+//     self.inventory = inventory;
+//     self. picked_up = picked_up;
+// }
 
 // runtime state initialization
 function __movable_chests_runtime() {
@@ -53,7 +53,7 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 
                 if _ctx.grid.node_object_id[found] == undefined && _ctx.grid.node_rug_id[found] != undefined {
                     is_rug_pick = true;
-                    object_id = undefined; // don't care anymore if it's a rug
+                    object_id = undefined; // don't care if it's a rug
                 } else {
                     mmapi_log_info("movable_chests", "found: " + string(found));
                     mmapi_log_flush("movable_chests");
@@ -78,21 +78,34 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 
             if inventory != undefined {
                 node.inventory = new Inventory(NODE_PROTOTYPES[object_id].interaction_chest.inventory_size);
-                chest = new __TravelChest(find_item_prototype(object_id).item_id, inventory, false);
+                
+                // chest = new __TravelChest(find_item_prototype(object_id).item_id, inventory, false);
 
-                ds_list_add(global.__my_travel_chests, chest);
+                // ds_list_add(global.__my_travel_chests, chest);
 
-                var curr = ds_list_size(global.__my_travel_chests) - 1;
+                // var curr = ds_list_size(global.__my_travel_chests) - 1;
 
-                mmapi_log_info("movable_chests", "curr: " + string(curr));
-                mmapi_log_flush("movable_chests");
+                var item_proto = find_item_prototype(node.object_id);
 
-                mmapi_log_info("movable_chests", "item: " + string(global.__my_travel_chests[curr].item_id));
-                mmapi_log_flush("movable_chests");
-                mmapi_log_info("movable_chests", "inventory: " + string(global.__my_travel_chests[curr].inventory));
-                mmapi_log_flush("movable_chests");
-                mmapi_log_info("movable_chests", "picked up? " + string(global.__my_travel_chests[curr].picked_up));
-                mmapi_log_flush("movable_chests");
+                if item_proto != undefined {
+                    var live_item = new LiveItem(item_proto.item_id);
+                    live_item.inner_item = inventory;
+
+                    drop_item(live_item, node.x, node.y);
+                    erase_object_node(_ctx, inst_index);
+
+                    return PickResult.Furniture;
+                }
+
+                // mmapi_log_info("movable_chests", "curr: " + string(curr));
+                // mmapi_log_flush("movable_chests");
+
+                // mmapi_log_info("movable_chests", "item: " + string(global.__my_travel_chests[curr].item_id));
+                // mmapi_log_flush("movable_chests");
+                // mmapi_log_info("movable_chests", "inventory: " + string(global.__my_travel_chests[curr].inventory));
+                // mmapi_log_flush("movable_chests");
+                // mmapi_log_info("movable_chests", "picked up? " + string(global.__my_travel_chests[curr].picked_up));
+                // mmapi_log_flush("movable_chests");
             }
         }
     }
@@ -108,19 +121,21 @@ function movable_chests_mod_give(_value, _ctx) {
     // if it's a chest, check if it's currently a travel chest,
     // because we don't want to iterate through the list unless we *have* to
     if (item.prototype.tags.contains("chest_and_storage")) {
-        for (var i = 0; i < ds_list_size(global.__my_travel_chests); i++) {
-            if (global.__my_travel_chests[i].picked_up == false && global.__my_travel_chests[i].item_id == item.item_id) {
-                mmapi_log_info("movable_chests", "it is a travel chest!");
-                mmapi_log_flush("movable_chests");
+        mmapi_log_info("movable_chests", "inner_item: " + string(item.inner_item));
+        mmapi_log_flush("movable_chests");
+        // for (var i = 0; i < ds_list_size(global.__my_travel_chests); i++) {
+        //     if (global.__my_travel_chests[i].picked_up == false && global.__my_travel_chests[i].item_id == item.item_id) {
+        //         mmapi_log_info("movable_chests", "it is a travel chest!");
+        //         mmapi_log_flush("movable_chests");
 
-                item.inner_item = global.__my_travel_chests[i].inventory;
+        //         item.inner_item = global.__my_travel_chests[i].inventory;
 
-                mmapi_log_info("movable_chests", "inner_item: " + string(item.inner_item));
-                mmapi_log_flush("movable_chests");
+        //         mmapi_log_info("movable_chests", "inner_item: " + string(item.inner_item));
+        //         mmapi_log_flush("movable_chests");
                 
-                return item;
-            }
-        }
+        //         return item;
+        //     }
+        // }
     }
 
     
