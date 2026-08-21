@@ -73,16 +73,20 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
                 if inventory != undefined {
                     node.inventory = new Inventory(NODE_PROTOTYPES[object_id].interaction_chest.inventory_size);
 
-                    var item_proto = find_item_prototype(node.object_id);
+                    var item_proto = find_item_prototype(object_id);
 
                     if item_proto != undefined {
                         var live_item = new LiveItem(item_proto.item_id);
                         live_item.inner_item = inventory;
 
-                        drop_item(live_item, node.x, node.y);
-                        erase_object_node(_ctx, inst_index);
+                        drop_item(live_item, node.renderer.x, node.renderer.y);
 
-                        return PickResult.Furniture;
+                        erase_object_node(_ctx.grid, inst_index);
+
+                        mmapi_log_info("movable_chests", "what is up man........");
+                        mmapi_log_flush("movable_chests");
+
+                        return 0;
                     }
                 }
             }
