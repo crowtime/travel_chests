@@ -109,7 +109,7 @@ function movable_chests_mod_give(_value, _ctx) {
 
     // if it's a chest, check if it's currently a travel chest,
     // because we don't want to iterate through the list unless we *have* to
-    if (item.prototype.contains("chest_and_storage")) {
+    if (item.prototype.tags.contains("chest_and_storage")) {
         mmapi_log_info("movable_chests", "inner_item: " + string(item.inner_item));
         mmapi_log_flush("movable_chests");
     }
@@ -118,7 +118,7 @@ function movable_chests_mod_give(_value, _ctx) {
 
 function movable_chests_mod_place_guard(_ctx) {
     // if the held item is an interaction_chest with an inner_item, it's a travel chest
-    if (_ctx.proto.tags.interaction_chest != undefined && _ctx.stack_count == 0) {
+    if (_ctx.proto.interaction_chest != undefined && _ctx.stack_count == 0) {
         var item = global.__ari.held_item();
 
         if (item.inner_item != undefined) {
@@ -130,7 +130,7 @@ function movable_chests_mod_place_guard(_ctx) {
             var rotation_matrix = furniture_calc_rot_to_rotation_matrix(calc_rot, _ctx.proto);
 
             var region = furniture_size(rotation_matrix, _ctx.proto);
-            if local_pos_is_valid(grid, xx, yy, region) == false {
+            if local_pos_is_valid(_ctx.grid, xx, yy, region) == false {
                 return undefined;
             }
             
@@ -147,14 +147,14 @@ function movable_chests_mod_place_guard(_ctx) {
                     rot_data.offset.set_rotate(rotation_matrix);
                     var posx = xx + abs(rot_data.transform.x) + rot_data.offset.x;
                     var posy = yy + abs(rot_data.transform.y) + rot_data.offset.y;
-                    var this_cell_node = grid.try_node_index_for_cell(posx, posy);
+                    var this_cell_node = _ctx.grid.try_node_index_for_cell(posx, posy);
 
-                    write_object_inst_node(grid, this_cell_node, node);
-                    set_collision_grid_flag_on_node(grid, _ctx.proto.collision_grid[# i, j], posx, posy);
+                    write_object_inst_node(_ctx.grid, this_cell_node, node);
+                    set_collision_grid_flag_on_node(_ctx.grid, _ctx.proto.collision_grid[# i, j], posx, posy);
                 }
             }
 
-            if proto.sub_grid != undefined {
+            if _ctx.proto.sub_grid != undefined {
                 var grid_vec = furniture_mask_prep_vecdata(_ctx.proto.size, rotation_matrix);
                 node.child_grid = new Grid(region.x, region.y, _ctx.grid.location_id);
                 node.child_grid.parent_node = node;
@@ -169,13 +169,14 @@ function movable_chests_mod_place_guard(_ctx) {
 
                         write_ground_to_location(node.child_grid, posx, posy, TerrainKind.Ground);
                         var inner_node = node.child_grid.node_index_for_cell(posx, posy);
-                        node.child_grid.node_flags[inner_node] = proto.sub_grid[# i, j];
+                        node.child_grid.node_flags[inner_node] = _ctx.proto.sub_grid[# i, j];
                     }
                 }
             } else {
                 node.child_grid = undefined;
             }
 
+            node.parent_grid = _ctx.grid;
 
             if node.prototype.interaction_chest != undefined {
                 node.inventory = item.inner_item;
@@ -186,6 +187,17 @@ function movable_chests_mod_place_guard(_ctx) {
                         slot.allow_soulbound = false;
                     });
                 };
+            }
+            
+            if (node != undefined && _ctx.grid.location_id == CURRENT_LOCATION_ID) {
+                if node[$ "inventory"] != undefined {
+                    STORAGE_NODES.push(node);
+                    node.use_in_crafting = node.prototype.interaction_chest != undefined
+                        && node.prototype.interaction_chest.belongs_to_ari
+                        && !node.prototype.interaction_chest.shipping_bin;
+                }
+
+                _ctx.grid.initialize_node_renderer(node);
             }
 
             return false;
