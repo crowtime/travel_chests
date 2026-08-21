@@ -72,10 +72,13 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 
                 if inventory != undefined {
                     var pick_sfx = fiddle_get("tool_fx/pick");
+                    var doppel = new TangoDoppel();
                     
                     doppel.play_good(pick_sfx.furniture.sfx);
                     set_rumble(RumbleKind.FurnitureRemove);
                     CAMERA.add_trauma(pick_sfx.furniture.cam_trauma);
+
+                    doppel.resolve();
 
                     node.inventory = new Inventory(NODE_PROTOTYPES[object_id].interaction_chest.inventory_size);
 
