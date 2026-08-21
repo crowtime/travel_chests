@@ -20,8 +20,8 @@ function movable_chests_register_callbacks() {
     // event hook registration. fires at the top of give_item()
     mmapi_filter("items.give", movable_chests_mod_give);
 
-    // guard hook registration. fires at top of write_furniture_to_location()
-    //mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard); 
+    guard hook registration. fires at top of write_furniture_to_location()
+    mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard); 
 }
 
 // hook callback
@@ -114,6 +114,14 @@ function movable_chests_mod_give(_value, _ctx) {
         mmapi_log_flush("movable_chests");
     }
     return undefined;
+}
+
+function movable_chests_mod_place_guard(_ctx) {
+    if (_ctx.proto.tags.contains("chest_and_storage")) {
+        var item = ari.held_item();
+        mmapi_log_info("movable_chests", "ari inner_item: " + string(item.inner_item));
+        mmapi_log_flush("movable_chests");
+    }
 }
 
 // MMAPI mod declaration + hook registration
