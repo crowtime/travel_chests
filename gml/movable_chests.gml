@@ -71,6 +71,12 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
                 var inventory = node.inventory;
 
                 if inventory != undefined {
+                    var pick_sfx = fiddle_get("tool_fx/pick");
+                    
+                    doppel.play_good(pick_sfx.furniture.sfx);
+                    set_rumble(RumbleKind.FurnitureRemove);
+                    CAMERA.add_trauma(pick_sfx.furniture.cam_trauma);
+
                     node.inventory = new Inventory(NODE_PROTOTYPES[object_id].interaction_chest.inventory_size);
 
                     var item_proto = find_item_prototype(object_id);
@@ -82,9 +88,6 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
                         drop_item(live_item, node.renderer.x, node.renderer.y);
 
                         erase_object_node(_ctx.grid, inst_index);
-
-                        mmapi_log_info("movable_chests", "what is up man........");
-                        mmapi_log_flush("movable_chests");
 
                         return 0;
                     }
