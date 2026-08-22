@@ -224,8 +224,13 @@ function movable_chests_mod_place_guard(_ctx) {
 
                 _ctx.grid.initialize_node_renderer(node);
 
-                global.__ari.inventory.remove(global.__ari.held_item());
-                global.__ari.par.remove_held_sprite();
+                var old = GAME_STATS.furniture_placed[$ object_id_to_string(item.prototype.object)] ?? 0;
+                GAME_STATS.furniture_placed[$ object_id_to_string(item.prototype.object)] = old + 1;
+
+                TANGO.play("SoundEffects/UI/UIPlaceBuilding");
+                set_rumble(RumbleKind.FurniturePlace);
+
+                global.__ari.inventory.slot(global.__ari.held_item_index).pop();
             }
 
             return false;
