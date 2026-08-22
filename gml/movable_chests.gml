@@ -223,6 +223,9 @@ function movable_chests_mod_place_guard(_ctx) {
                 }
 
                 _ctx.grid.initialize_node_renderer(node);
+
+                global.__ari.inventory.remove(global.__ari.held_item());
+                global.__ari.par.remove_held_sprite();
             }
 
             return false;
