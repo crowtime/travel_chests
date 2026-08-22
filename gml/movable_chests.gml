@@ -86,6 +86,11 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 
                     if item_proto != undefined {
                         var live_item = new LiveItem(item_proto.item_id);
+
+                        if live_item.infusion == undefined {
+                            live_item.infusion = try_string_to_infusion(node.infusion);
+                        }
+
                         live_item.inner_item = inventory;
 
                         drop_item(live_item, node.renderer.x, node.renderer.y);
@@ -139,7 +144,14 @@ function movable_chests_mod_place_guard(_ctx) {
             var node = create_parent_object_node(_ctx.proto, xx, yy, region);
             node.cardinal_index = calc_rot;
             node.destructable =  _ctx.proto.destructable;
+            node.infusion =  undefined;
+            node.date_photo =  undefined;
             node.on = false;
+
+            var old_terrain = undefined;
+            if _ctx.proto.output_terrain != undefined {
+                old_terrain = array_create(_ctx.proto.size.x * _ctx.proto.size.y, undefined);
+            }
 
             for (var i = 0; i < _ctx.proto.size.x; i++) {
                 for (var j = 0; j < _ctx.proto.size.y; j++) {
@@ -152,6 +164,11 @@ function movable_chests_mod_place_guard(_ctx) {
                     write_object_inst_node(_ctx.grid, this_cell_node, node);
                     set_collision_grid_flag_on_node(_ctx.grid, _ctx.proto.collision_grid[# i, j], posx, posy);
                 }
+            }
+
+            node.old_terrain = old_terrain;
+            if old_terrain != undefined {
+                array_push(_ctx.grid.terrain_editors, node);
             }
 
             if _ctx.proto.sub_grid != undefined {
@@ -177,6 +194,14 @@ function movable_chests_mod_place_guard(_ctx) {
             }
 
             node.parent_grid = _ctx.grid;
+
+            if node.prototype.interaction_turn_on != undefined {
+                node.is_on = false;
+            }
+
+            if node.prototype.write_flag != undefined {
+                T2R.write(node.prototype.write_flag, true);
+            }
 
             if node.prototype.interaction_chest != undefined {
                 node.inventory = item.inner_item;
