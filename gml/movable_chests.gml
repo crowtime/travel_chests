@@ -1,5 +1,8 @@
 // Travel Chests
 
+#macro TRAVELING_CHESTS global.__traveling_chests
+global.__traveling_chests = List();
+
 // runtime state initialization
 function __movable_chests_runtime() {
     if (global[$ "__movable_chests"] == undefined) {
@@ -17,11 +20,17 @@ function movable_chests_register_callbacks() {
     // filter hook registration. fires at top of pick_node()
     mmapi_filter("resource.node_modifier", movable_chests_mod_node_modifier); 
 
-    // event hook registration. fires at the top of give_item()
+    // filter hook registration. fires at the top of give_item()
     mmapi_filter("items.give", movable_chests_mod_give);
 
     // guard hook registration. fires at top of write_furniture_to_location()
-    mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard); 
+    mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard);
+
+    // event hook registration. fires after "Game.last_serde_path = save_path;" in save_game()
+    mmapi_on("save.game_saving", movable_chests_mod_saving);
+
+    // event hook registration. fires after "Game.last_serde_path = loader.save_path" in load_game()
+    mmapi_on("save.game_loaded", movable_chests_mod_loading);
 }
 
 // hook callback
@@ -238,6 +247,14 @@ function movable_chests_mod_place_guard(_ctx) {
     }
 
     return undefined;
+}
+
+function movable_chests_mod_saving (_ctx){
+
+}
+
+function movable_chests_mod_loading (_ctx){
+
 }
 
 // MMAPI mod declaration + hook registration
