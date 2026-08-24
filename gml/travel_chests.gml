@@ -4,37 +4,37 @@
 global.__traveling_chests = List();
 
 // runtime state initialization
-function __movable_chests_runtime() {
-    if (global[$ "__movable_chests"] == undefined) {
-        global.__movable_chests = { registered_hooks: undefined };
+function __travel_chests_runtime() {
+    if (global[$ "__travel_chests"] == undefined) {
+        global.__travel_chests = { registered_hooks: undefined };
     }
-    return global.__movable_chests;
+    return global.__travel_chests;
 }
 
 // hook callback registration
-function movable_chests_register_callbacks() {
-    var _rt = __movable_chests_runtime();
+function travel_chests_register_callbacks() {
+    var _rt = __travel_chests_runtime();
     if (_rt.registered_hooks != undefined) return;
     _rt.registered_hooks = true;
 
     // filter hook registration. fires at top of pick_node()
-    mmapi_filter("resource.node_modifier", movable_chests_mod_node_modifier);
+    mmapi_filter("resource.node_modifier", travel_chests_mod_node_modifier);
 
     // filter hook registration. fires at the top of give_item()
-    mmapi_filter("items.give", movable_chests_mod_give);
+    mmapi_filter("items.give", travel_chests_mod_give);
 
     // guard hook registration. fires at top of write_furniture_to_location()
-    mmapi_guard("furniture.place_guard", movable_chests_mod_place_guard);
+    mmapi_guard("furniture.place_guard", travel_chests_mod_place_guard);
 
     // event hook registration. fires after "Game.last_serde_path = save_path;" in save_game()
-    mmapi_on("save.game_saving", movable_chests_mod_saving);
+    mmapi_on("save.game_saving", travel_chests_mod_saving);
 
     // event hook registration. fires after "Game.last_serde_path = loader.save_path" in load_game()
-    mmapi_on("save.game_loaded", movable_chests_mod_loading);
+    mmapi_on("save.game_loaded", travel_chests_mod_loading);
 }
 
 // hook callback
-function movable_chests_mod_node_modifier(_value, _ctx) {
+function travel_chests_mod_node_modifier(_value, _ctx) {
     if (_value == undefined) return undefined;
 
     if (_ctx.action == "pick") {
@@ -58,8 +58,8 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
                         is_rug_pick = true;
                         object_id = undefined; // don't care if it's a rug
                     } else {
-                        mmapi_log_info("movable_chests", "found: " + string(found));
-                        mmapi_log_flush("movable_chests");
+                        mmapi_log_info("travel_chests", "found: " + string(found));
+                        mmapi_log_flush("travel_chests");
 
                         object_id = _ctx.grid.node_object_id[inst_index];
                     }
@@ -73,8 +73,8 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 
             // if it is furniture that is a chest, grab the node's inventory
             if (category == ObjectCategory.Furniture && NODE_PROTOTYPES[object_id].interaction_chest != undefined) {
-                mmapi_log_info("movable_chests", "chest broken!");
-                mmapi_log_flush("movable_chests");
+                mmapi_log_info("travel_chests", "chest broken!");
+                mmapi_log_flush("travel_chests");
 
                 var node = _ctx.grid.node_parent[inst_index];
                 var inventory = node.inventory;
@@ -116,7 +116,7 @@ function movable_chests_mod_node_modifier(_value, _ctx) {
 }
 
 
-function movable_chests_mod_give(_value, _ctx) {
+function travel_chests_mod_give(_value, _ctx) {
     if (_value == undefined) return undefined;
     var item = _value.item;
     item = is_struct(item) ? item : new LiveItem(item);
@@ -124,13 +124,13 @@ function movable_chests_mod_give(_value, _ctx) {
     // if it's a chest, check if it's currently a travel chest,
     // because we don't want to iterate through the list unless we *have* to
     if (item.prototype.tags.contains("chest_and_storage")) {
-        mmapi_log_info("movable_chests", "inner_item: " + string(item.inner_item));
-        mmapi_log_flush("movable_chests");
+        mmapi_log_info("travel_chests", "inner_item: " + string(item.inner_item));
+        mmapi_log_flush("travel_chests");
     }
     return undefined;
 }
 
-function movable_chests_mod_place_guard(_ctx) {
+function travel_chests_mod_place_guard(_ctx) {
     // if the held item is an interaction_chest with an inner_item, it's a travel chest
     if (_ctx.proto.interaction_chest != undefined && _ctx.stack_count == 0) {
         var item = global.__ari.held_item();
@@ -249,14 +249,14 @@ function movable_chests_mod_place_guard(_ctx) {
     return undefined;
 }
 
-function movable_chests_mod_saving (_ctx){
+function travel_chests_mod_saving (_ctx){
 
 }
 
-function movable_chests_mod_loading (_ctx){
+function travel_chests_mod_loading (_ctx){
 
 }
 
 // MMAPI mod declaration + hook registration
-mmapi_mod_declare("movable_chests", "1.0.0");
-movable_chests_register_callbacks();
+mmapi_mod_declare("travel_chests", "1.0.0");
+travel_chests_register_callbacks();
