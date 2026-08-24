@@ -18,7 +18,7 @@ function movable_chests_register_callbacks() {
     _rt.registered_hooks = true;
 
     // filter hook registration. fires at top of pick_node()
-    mmapi_filter("resource.node_modifier", movable_chests_mod_node_modifier); 
+    mmapi_filter("resource.node_modifier", movable_chests_mod_node_modifier);
 
     // filter hook registration. fires at the top of give_item()
     mmapi_filter("items.give", movable_chests_mod_give);
