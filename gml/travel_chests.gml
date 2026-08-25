@@ -261,6 +261,10 @@ function travel_chests_mod_place_guard(_ctx) {
 }
 
 function travel_chests_save_collect(){
+    json3 = global.__traveling_chests.serialize();
+    mmapi_log_info("travel_chests", "serialize: " + string(json3));
+    mmapi_log_flush("travel_chests");
+
     json = json_encode(global.__traveling_chests);
 
     mmapi_log_info("travel_chests", "encode: " + string(json));
