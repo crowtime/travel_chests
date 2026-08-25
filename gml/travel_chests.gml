@@ -98,11 +98,11 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
                         }
 
                         if global.__traveling_chests == undefined {
-                            global.__traveling_chests = ds_list_create();
+                            global.__traveling_chests = List();
                         }
 
-                        ds_list_add(global.__traveling_chests, inventory);
-                        var curr = ds_list_size(global.__traveling_chests) - 1;
+                        global.__traveling_chests.push(inventory);
+                        var curr = global.__traveling_chests.count() - 1;
 
                         live_item.inner_item = curr;
 
@@ -217,13 +217,15 @@ function travel_chests_mod_place_guard(_ctx) {
             }
 
             if node.prototype.interaction_chest != undefined {
-                if global.__traveling_chests[item.inner_item] == undefined {
+                if global.__traveling_chests.get(item.inner_item) == undefined {
                     mmapi_log_info("travel_chests", "chest inventory " + string(item.inner_item) + " does not exist");
                     mmapi_log_flush("travel_chests");
                     return false;
                 }
-                node.inventory = global.__traveling_chests[item.inner_item];
+                node.inventory = global.__traveling_chests.get(item.inner_item);
                 node.chest_icon = undefined;
+
+                global.__traveling_chests.remove(item.inner_item);
 
                 if node.prototype.interaction_chest.allow_soulbound == false {
                     node.inventory.slots.for_each(function(slot) {
@@ -259,31 +261,26 @@ function travel_chests_mod_place_guard(_ctx) {
 }
 
 function travel_chests_save_collect(){
-    var chests_to_store = ds_map_create();
-    ds_map_add_list(chests_to_store, "traveling_chests", global.__traveling_chests);
-    json = json_encode(chests_to_store);
-    ds_map_destroy(chests_to_store);
+    json = json_encode(global.__traveling_chests);
+
+    mmapi_log_info("travel_chests", "encode: " + string(json));
+    mmapi_log_flush("travel_chests");
+
+    json2 = json_stringify(global.__traveling_chests);
+
+    mmapi_log_info("travel_chests", "stringify: " + string(json2));
+    mmapi_log_flush("travel_chests");
+
     return json;
 }
 
 function travel_chests_save_apply(data){
     if data != undefined {
-        var chests_to_store = json_decode(data);
-
+        mmapi_log_info("travel_chests", "data: " + string(data));
+        mmapi_log_flush("travel_chests");
+        
         global.__traveling_chests = ds_list_create();
-
-        var list = ds_map_find_value(chests_to_store, "traveling_chests");
-
-        for (var i = 0; i < ds_list_size(list); i++) {
-            var map = ds_list_find_value(list, i);
-            var curr = ds_map_find_first(map);
-
-            while (is_string(curr)) {
-                global.__traveling_chests[i] = ds_map_find_value(map, "name");
-                curr = ds_map_find_next(map, curr);
-            }
-        }
-        ds_map_destroy(chests_to_store);
+        //global.__traveling_chests = deserialize(data);
     }
 }
 
