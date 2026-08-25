@@ -1,7 +1,7 @@
 // Travel Chests
 
 #macro TRAVELING_CHESTS global.__traveling_chests
-global.__traveling_chests = List();
+global.__traveling_chests = undefined;
 
 // runtime state initialization
 function __travel_chests_runtime() {
@@ -100,7 +100,14 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
                             live_item.infusion = try_string_to_infusion(node.infusion);
                         }
 
-                        live_item.inner_item = inventory;
+                        if global.__traveling_chests == undefined {
+                            global.__traveling_chests = ds_list_create();
+                        }
+
+                        ds_list_add(global.__traveling_chests, inventory);
+                        var curr = ds_list_size(global.__traveling_chests) - 1;
+
+                        live_item.inner_item = curr;
 
                         drop_item(live_item, node.renderer.x, node.renderer.y);
 
@@ -115,7 +122,7 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
     }
 }
 
-
+// debug check. to be deleted once functional
 function travel_chests_mod_give(_value, _ctx) {
     if (_value == undefined) return undefined;
     var item = _value.item;
@@ -213,7 +220,12 @@ function travel_chests_mod_place_guard(_ctx) {
             }
 
             if node.prototype.interaction_chest != undefined {
-                node.inventory = item.inner_item;
+                if global.__traveling_chests[item.inner_item] == undefined {
+                    mmapi_log_info("travel_chests", "chest inventory " + string(item.inner_item) + " does not exist");
+                    mmapi_log_flush("travel_chests");
+                    return false;
+                }
+                node.inventory = global.__traveling_chests[item.inner_item];
                 node.chest_icon = undefined;
 
                 if node.prototype.interaction_chest.allow_soulbound == false {
@@ -250,11 +262,40 @@ function travel_chests_mod_place_guard(_ctx) {
 }
 
 function travel_chests_mod_saving (_ctx){
+    var chests_to_store = ds_map_create();
+    ds_map_add_list(chests_to_store, "traveling_chests", global.__traveling_chests);
+    json_encode(chests_to_store)
+    ds_map_destroy(chests_to_store);
 
+    var buffer = buffer_create(1, buffer_grow, 1);
+    buffer_write(buffer, buffer_text, chests_to_store);
+    //buffer_save(buffer, "");
+    buffer_delete(buffer);
 }
 
 function travel_chests_mod_loading (_ctx){
+    var buffer = buffer_load("");
 
+    if buffer_exists(buffer) {
+        var json = buffer_read(buffer, buffer_text);
+        var chests_to_store = json_decode();
+        buffer_delete(buffer);
+
+        global.__traveling_chests = ds_list_create();
+
+        var list = ds_map_find_value(chests_to_store, "traveling_chests");
+
+        for (var i = 0; i < ds_list_size(list); i++) {
+            var map = ds_list_find_value(list, i);
+            var curr = ds_map_find_first(map);
+
+            while (is_string(curr)) {
+                global.__traveling_chests[i] = ds_map_find_value(map, "name");
+                curr = ds_map_find_next(map, curr);
+            }
+        }
+        ds_map_destroy(chests_to_store);
+    }
 }
 
 // MMAPI mod declaration + hook registration
