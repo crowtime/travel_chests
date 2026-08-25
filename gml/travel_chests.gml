@@ -17,6 +17,9 @@ function travel_chests_register_callbacks() {
     if (_rt.registered_hooks != undefined) return;
     _rt.registered_hooks = true;
 
+    // save registration. writes to mod_data/travel_chests/saves/<prefix>.json
+    mmapi_modsave_register("travel_chests", travel_chests_save_collect, travel_chests_save_apply);
+
     // filter hook registration. fires at top of pick_node()
     mmapi_filter("resource.node_modifier", travel_chests_mod_node_modifier);
 
@@ -25,12 +28,6 @@ function travel_chests_register_callbacks() {
 
     // guard hook registration. fires at top of write_furniture_to_location()
     mmapi_guard("furniture.place_guard", travel_chests_mod_place_guard);
-
-    // event hook registration. fires after "Game.last_serde_path = save_path;" in save_game()
-    mmapi_on("save.game_saving", travel_chests_mod_saving);
-
-    // event hook registration. fires after "Game.last_serde_path = loader.save_path" in load_game()
-    mmapi_on("save.game_loaded", travel_chests_mod_loading);
 }
 
 // hook callback
@@ -261,25 +258,17 @@ function travel_chests_mod_place_guard(_ctx) {
     return undefined;
 }
 
-function travel_chests_mod_saving (_ctx){
+function travel_chests_save_collect(){
     var chests_to_store = ds_map_create();
     ds_map_add_list(chests_to_store, "traveling_chests", global.__traveling_chests);
-    json_encode(chests_to_store)
+    json = json_encode(chests_to_store);
     ds_map_destroy(chests_to_store);
-
-    var buffer = buffer_create(1, buffer_grow, 1);
-    buffer_write(buffer, buffer_text, chests_to_store);
-    //buffer_save(buffer, "");
-    buffer_delete(buffer);
+    return json;
 }
 
-function travel_chests_mod_loading (_ctx){
-    var buffer = buffer_load("");
-
-    if buffer_exists(buffer) {
-        var json = buffer_read(buffer, buffer_text);
-        var chests_to_store = json_decode();
-        buffer_delete(buffer);
+function travel_chests_save_apply(data){
+    if data != undefined {
+        var chests_to_store = json_decode(data);
 
         global.__traveling_chests = ds_list_create();
 
