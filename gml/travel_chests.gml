@@ -17,14 +17,17 @@ function travel_chests_register_callbacks() {
     if (_rt.registered_hooks != undefined) return;
     _rt.registered_hooks = true;
 
-    // save registration. writes to mod_data/travel_chests/saves/<prefix>.json
-    mmapi_modsave_register("travel_chests", travel_chests_save_collect, travel_chests_save_apply);
-
     // filter hook registration. fires at top of pick_node()
     mmapi_filter("resource.node_modifier", travel_chests_mod_node_modifier);
 
     // guard hook registration. fires at top of write_furniture_to_location()
     mmapi_guard("furniture.place_guard", travel_chests_mod_place_guard);
+
+    // event hook registration. fires at top of pick_node()
+    mmapi_on("items.trashed", travel_chests_mod_dont_trash_inventory);
+
+    // save registration. writes to mod_data/travel_chests/saves/<prefix>.json
+    mmapi_modsave_register("travel_chests", travel_chests_save_collect, travel_chests_save_apply);
 }
 
 // hook callback
@@ -234,6 +237,15 @@ function travel_chests_mod_place_guard(_ctx) {
     }
 
     return undefined;
+}
+
+function travel_chests_mod_dont_trash_inventory(_ctx){
+    if (_ctx.proto.interaction_chest != undefined && _ctx.inner_item != undefined) {
+        item_inventory = global.__traveling_chests.get(_ctx.inner_item);
+        global.__traveling_chests.remove(_ctx.inner_item);
+
+        drop_item(item_inventory.drain().to_array(), global.__ari.x, global.__ari.y);
+    }
 }
 
 function travel_chests_save_collect(){
