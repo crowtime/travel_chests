@@ -55,9 +55,6 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
                         is_rug_pick = true;
                         object_id = undefined; // don't care if it's a rug
                     } else {
-                        mmapi_log_info("travel_chests", "found: " + string(found));
-                        mmapi_log_flush("travel_chests");
-
                         object_id = _ctx.grid.node_object_id[inst_index];
                     }
                     break;
@@ -70,9 +67,6 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
 
             // if it is furniture that is a chest, grab the node's inventory
             if (category == ObjectCategory.Furniture && NODE_PROTOTYPES[object_id].interaction_chest != undefined) {
-                mmapi_log_info("travel_chests", "chest broken!");
-                mmapi_log_flush("travel_chests");
-
                 var node = _ctx.grid.node_parent[inst_index];
                 var inventory = node.inventory;
 
@@ -117,21 +111,6 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
         }
         return undefined;
     }
-}
-
-// debug check. to be deleted once functional
-function travel_chests_mod_give(_value, _ctx) {
-    if (_value == undefined) return undefined;
-    var item = _value.item;
-    item = is_struct(item) ? item : new LiveItem(item);
-
-    // if it's a chest, check if it's currently a travel chest,
-    // because we don't want to iterate through the list unless we *have* to
-    if (item.prototype.tags.contains("chest_and_storage")) {
-        mmapi_log_info("travel_chests", "inner_item: " + string(item.inner_item));
-        mmapi_log_flush("travel_chests");
-    }
-    return undefined;
 }
 
 function travel_chests_mod_place_guard(_ctx) {
