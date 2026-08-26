@@ -261,30 +261,34 @@ function travel_chests_mod_place_guard(_ctx) {
 }
 
 function travel_chests_save_collect(){
-    json3 = global.__traveling_chests.serialize();
-    mmapi_log_info("travel_chests", "serialize: " + string(json3));
+    if global.__traveling_chests.count() == 0 {
+        return undefined;
+    }
+
+    var chests_to_store = array_create(global.__traveling_chests.count());
+    for (var i = 0; i < global.__traveling_chests.count(); i++){
+        chests_to_store[i] = global.__traveling_chests.get(i).serialize();
+    }
+
+    mmapi_log_info("travel_chests", "to store: " + string(chests_to_store));
     mmapi_log_flush("travel_chests");
 
-    json = json_encode(global.__traveling_chests);
-
-    mmapi_log_info("travel_chests", "encode: " + string(json));
-    mmapi_log_flush("travel_chests");
-
-    json2 = json_stringify(global.__traveling_chests);
-
-    mmapi_log_info("travel_chests", "stringify: " + string(json2));
-    mmapi_log_flush("travel_chests");
-
-    return json;
+    return chests_to_store;
 }
 
 function travel_chests_save_apply(data){
-    if data != undefined {
+    if !array_is_empty(data) {
         mmapi_log_info("travel_chests", "data: " + string(data));
         mmapi_log_flush("travel_chests");
+
+        for (var i = 0; i < array_length(data); i++){
+            data[i] = data[i].deserialize();
+        }
         
-        global.__traveling_chests = ds_list_create();
-        //global.__traveling_chests = deserialize(data);
+        global.__traveling_chests = ListFromArray(data);
+
+        mmapi_log_info("travel_chests", "traveling_chests: " + string(data));
+        mmapi_log_flush("travel_chests");
     }
 }
 
