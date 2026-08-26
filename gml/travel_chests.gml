@@ -130,6 +130,25 @@ function travel_chests_mod_place_guard(_ctx) {
 
             var rotation_matrix = furniture_calc_rot_to_rotation_matrix(calc_rot, _ctx.proto);
 
+            if _ctx.proto.rug == false {
+                var node_at_pos = _ctx.grid.try_node_index_for_cell(xx, yy);
+                if node_at_pos == undefined {
+                    return undefined;
+                }
+                if object_id_to_object_category(_ctx.grid.node_object_id[node_at_pos]) == ObjectCategory.Furniture
+                    && _ctx.grid.node_parent[node_at_pos].child_grid != undefined
+                {
+                    return write_furniture_to_location(
+                        _ctx.grid.node_parent[node_at_pos].child_grid,
+                        xx - _ctx.grid.node_parent[node_at_pos].top_left_x,
+                        yy - _ctx.grid.node_parent[node_at_pos].top_left_y,
+                        _ctx.proto,
+                        _ctx.stack_count + 1,
+                        _ctx.rotation
+                    );
+                }
+            }
+
             var region = furniture_size(rotation_matrix, _ctx.proto);
             if local_pos_is_valid(_ctx.grid, xx, yy, region) == false {
                 return undefined;
