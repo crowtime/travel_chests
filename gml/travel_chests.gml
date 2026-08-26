@@ -240,11 +240,11 @@ function travel_chests_mod_place_guard(_ctx) {
 }
 
 function travel_chests_mod_dont_trash_inventory(_ctx){
-    if (_ctx.proto.interaction_chest != undefined && _ctx.inner_item != undefined) {
-        item_inventory = global.__traveling_chests.get(_ctx.inner_item);
-        global.__traveling_chests.remove(_ctx.inner_item);
+    if (_ctx.item.prototype.tags.contains("chest_and_storage") && _ctx.item.inner_item != undefined) {
+        item_inventory = global.__traveling_chests.get(_ctx.item.inner_item);
+        global.__traveling_chests.remove(_ctx.item.inner_item);
 
-        drop_item(item_inventory.drain().to_array(), global.__ari.x, global.__ari.y);
+        drop_item(item_inventory.drain().to_array(), obj_ari.x, obj_ari.y);
     }
 }
 
