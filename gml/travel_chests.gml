@@ -30,7 +30,9 @@ function travel_chests_register_callbacks() {
     mmapi_modsave_register("travel_chests", travel_chests_save_collect, travel_chests_save_apply);
 }
 
-// hook callback
+// when chest with items inside is broken with a pick, it stores the inventory 
+// in the global traveling_chests variable. it then stores the index inside the inner_item of a new LiveItem
+// and drops the LiveItem. returns 0 so that only one chest will drop
 function travel_chests_mod_node_modifier(_value, _ctx) {
     if (_value == undefined) return undefined;
 
@@ -53,7 +55,7 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
 
                     if _ctx.grid.node_object_id[found] == undefined && _ctx.grid.node_rug_id[found] != undefined {
                         is_rug_pick = true;
-                        object_id = undefined; // don't care if it's a rug
+                        object_id = undefined; // don't care to continue if it's a rug
                     } else {
                         object_id = _ctx.grid.node_object_id[inst_index];
                     }
@@ -62,6 +64,7 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
             }
         }
 
+        // if object is found + isn't a rug, check the category
         if object_id != undefined {
             var category = object_id_to_object_category(object_id);
 
@@ -71,6 +74,7 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
                 var inventory = node.inventory;
 
                 if inventory != undefined {
+                    // sfx + effects
                     var pick_sfx = fiddle_get("tool_fx/pick");
                     var doppel = new TangoDoppel();
                     
@@ -80,11 +84,13 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
 
                     doppel.resolve();
 
+                    // empty inventory from the placed chest
                     node.inventory = new Inventory(NODE_PROTOTYPES[object_id].interaction_chest.inventory_size);
 
                     var item_proto = find_item_prototype(object_id);
 
                     if item_proto != undefined {
+                        // create the LiveItem ourselves so we can add a pointer to find the inventory
                         var live_item = new LiveItem(item_proto.item_id);
 
                         if live_item.infusion == undefined {
@@ -95,9 +101,11 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
                             global.__traveling_chests = List();
                         }
 
+                        // add inventory to the list of currently traveling chests
                         global.__traveling_chests.push(inventory);
                         var curr = global.__traveling_chests.count() - 1;
 
+                        // store index so we can find the inventory in the list later
                         live_item.inner_item = curr;
 
                         drop_item(live_item, node.renderer.x, node.renderer.y);
@@ -113,6 +121,8 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
     }
 }
 
+// place guard that places the node itself so it can store the inventory inside.
+// returns false so the chest is only placed once
 function travel_chests_mod_place_guard(_ctx) {
     if array_length(_ctx.proto.cardinals) == 0 || _ctx.stack_count >= 3 || (_ctx.stack_count > 0 && _ctx.proto.can_be_child == false)  {
         return undefined;
@@ -123,6 +133,8 @@ function travel_chests_mod_place_guard(_ctx) {
         var item = global.__ari.held_item();
 
         if (item.inner_item != undefined) {
+            // lots of duplicate code from the game because we need to create the node ourselves 
+            // to be able to store the items inside with this hook
             var xx = _ctx.x;
             var yy = _ctx.y
 
@@ -251,13 +263,19 @@ function travel_chests_mod_place_guard(_ctx) {
             }
 
             if node.prototype.interaction_chest != undefined {
+                // if the inventory for this travel chest's inventory was lost, 
+                // writes a log and will not place the item
                 if global.__traveling_chests.get(item.inner_item) == undefined {
                     mmapi_log_info("travel_chests", "chest inventory " + string(item.inner_item) + " does not exist");
                     mmapi_log_flush("travel_chests");
                     return false;
                 }
+
                 node.inventory = global.__traveling_chests.get(item.inner_item);
-                node.chest_icon = undefined;
+
+                // default is undefined. may possibly update to store the icon later if that is wanted, 
+                // but i didn't write the logic for that yet
+                node.chest_icon = undefined; 
 
                 global.__traveling_chests.remove(item.inner_item);
 
@@ -281,19 +299,23 @@ function travel_chests_mod_place_guard(_ctx) {
                 var old = GAME_STATS.furniture_placed[$ object_id_to_string(item.prototype.object)] ?? 0;
                 GAME_STATS.furniture_placed[$ object_id_to_string(item.prototype.object)] = old + 1;
 
+                // sfx + effects
                 TANGO.play("SoundEffects/UI/UIPlaceBuilding");
                 set_rumble(RumbleKind.FurniturePlace);
 
+                // remove item from inventory
                 global.__ari.inventory.slot(global.__ari.held_item_index).pop();
             }
-
             return false;
         }
     }
-
     return undefined;
 }
 
+// currently there is no seam/hook to change how soulbind works 
+// (and it can only be adjusted for the prototype, and therefore every chest of that kind),
+// so i can't prevent the player from selling / throwing out the chest.
+// as a compromise, the inventory drops to the ground if the chest is thrown away
 function travel_chests_mod_dont_trash_inventory(_ctx){
     if (_ctx.item.prototype.tags.contains("chest_and_storage") && _ctx.item.inner_item != undefined) {
         item_inventory = global.__traveling_chests.get(_ctx.item.inner_item);
@@ -303,6 +325,9 @@ function travel_chests_mod_dont_trash_inventory(_ctx){
     }
 }
 
+// saves the traveling_chests list as an array
+// when the chest's inner_item is serialized, it should stay inside, 
+// so we don't need to do anything about the index
 function travel_chests_save_collect(){
     if global.__traveling_chests.count() == 0 {
         return undefined;
@@ -315,6 +340,7 @@ function travel_chests_save_collect(){
     return chests_to_store;
 }
 
+// loads the traveling_chests list from the array
 function travel_chests_save_apply(data){
     if data != undefined && !array_is_empty(data) {
         global.__traveling_chests = List();
