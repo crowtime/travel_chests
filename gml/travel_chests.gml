@@ -23,9 +23,6 @@ function travel_chests_register_callbacks() {
     // filter hook registration. fires at top of pick_node()
     mmapi_filter("resource.node_modifier", travel_chests_mod_node_modifier);
 
-    // filter hook registration. fires at the top of give_item()
-    mmapi_filter("items.give", travel_chests_mod_give);
-
     // guard hook registration. fires at top of write_furniture_to_location()
     mmapi_guard("furniture.place_guard", travel_chests_mod_place_guard);
 }
