@@ -114,8 +114,12 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
 }
 
 function travel_chests_mod_place_guard(_ctx) {
+    if array_length(_ctx.proto.cardinals) == 0 || _ctx.stack_count >= 3 || (_ctx.stack_count > 0 && _ctx.proto.can_be_child == false)  {
+        return undefined;
+    }
+
     // if the held item is an interaction_chest with an inner_item, it's a travel chest
-    if (_ctx.proto.interaction_chest != undefined && _ctx.stack_count == 0) {
+    if (_ctx.proto.interaction_chest != undefined) {
         var item = global.__ari.held_item();
 
         if (item.inner_item != undefined) {
