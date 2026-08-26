@@ -269,26 +269,20 @@ function travel_chests_save_collect(){
     for (var i = 0; i < global.__traveling_chests.count(); i++){
         chests_to_store[i] = global.__traveling_chests.get(i).serialize();
     }
-
-    mmapi_log_info("travel_chests", "to store: " + string(chests_to_store));
-    mmapi_log_flush("travel_chests");
-
     return chests_to_store;
 }
 
 function travel_chests_save_apply(data){
-    if !array_is_empty(data) {
-        mmapi_log_info("travel_chests", "data: " + string(data));
-        mmapi_log_flush("travel_chests");
+    if data != undefined && !array_is_empty(data) {
+        global.__traveling_chests = List();
+        var curr_chest = undefined;
 
         for (var i = 0; i < array_length(data); i++){
-            data[i] = data[i].deserialize();
-        }
-        
-        global.__traveling_chests = ListFromArray(data);
+            curr_chest = Inventory();
+            curr_chest.deserialize(data[i]);
 
-        mmapi_log_info("travel_chests", "traveling_chests: " + string(data));
-        mmapi_log_flush("travel_chests");
+            global.__traveling_chests.push(curr_chest);
+        }
     }
 }
 
