@@ -156,6 +156,19 @@ function travel_chests_mod_place_guard(_ctx) {
             
             var rot_data = furniture_mask_prep_vecdata(_ctx.proto.size, rotation_matrix);
 
+            if !furniture_test_flag_mask(
+                rot_data,
+                _ctx.grid,
+                xx,
+                yy,
+                _ctx.proto,
+                rotation_matrix,
+                false,
+                _ctx.grid != GRID,
+            ) {
+                return undefined;
+            }
+
             var node = create_parent_object_node(_ctx.proto, xx, yy, region);
             node.cardinal_index = calc_rot;
             node.destructable =  _ctx.proto.destructable;
@@ -178,6 +191,25 @@ function travel_chests_mod_place_guard(_ctx) {
 
                     write_object_inst_node(_ctx.grid, this_cell_node, node);
                     set_collision_grid_flag_on_node(_ctx.grid, _ctx.proto.collision_grid[# i, j], posx, posy);
+
+                    if _ctx.proto.output_terrain != undefined {
+                        var output_cell = _ctx.proto.output_terrain[# i, j];
+                        if output_cell != undefined {
+                            old_terrain[j * _ctx.proto.size.x + i] = furniture_write_new_terrain(_ctx.grid, this_cell_node, output_cell);
+                        }
+                    }
+
+                    if has_flag(_ctx.grid.node_flags[this_cell_node], TileFlag.Unbreakable) {
+                        node.destructable = false;
+                    }
+
+                    if _ctx.proto.bed_kind != undefined {
+                        _ctx.grid.node_furniture_footstep[? this_cell_node] = FootstepKind.Carpet;
+                    }
+
+                    if _ctx.proto.footstep != undefined {
+                        _ctx.grid.node_furniture_footstep[? this_cell_node] = proto.footstep;
+                    }
                 }
             }
 
