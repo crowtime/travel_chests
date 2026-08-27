@@ -101,6 +101,15 @@ function travel_chests_mod_node_modifier(_value, _ctx) {
                             global.__traveling_chests = List();
                         }
 
+                        // remove empty slots at the end
+                        for (var i = global.__traveling_chests.count() - 1; i >= 0; i--){
+                            if global.__traveling_chests.get(i) == undefined {
+                                global.__traveling_chests.remove(i)
+                            } else {
+                                break;
+                            }
+                        }
+
                         // add inventory to the list of currently traveling chests
                         global.__traveling_chests.push(inventory);
                         var curr = global.__traveling_chests.count() - 1;
@@ -276,8 +285,11 @@ function travel_chests_mod_place_guard(_ctx) {
                 // default is undefined. may possibly update to store the icon later if that is wanted, 
                 // but i didn't write the logic for that yet
                 node.chest_icon = undefined; 
-
-                global.__traveling_chests.remove(item.inner_item);
+                if (item.inner_item == global.__traveling_chests.count() - 1) {
+                    global.__traveling_chests.remove(item.inner_item);
+                } else {
+                    global.__traveling_chests.set(item.inner_item, undefined);
+                }
 
                 if node.prototype.interaction_chest.allow_soulbound == false {
                     node.inventory.slots.for_each(function(slot) {
@@ -329,13 +341,26 @@ function travel_chests_mod_dont_trash_inventory(_ctx){
 // when the chest's inner_item is serialized, it should stay inside, 
 // so we don't need to do anything about the index
 function travel_chests_save_collect(){
+    // remove any empty slots at the end
+    for (var i = global.__traveling_chests.count() - 1; i >= 0; i--){
+        if global.__traveling_chests.get(i) == undefined {
+            global.__traveling_chests.remove(i)
+        } else {
+            break;
+        }
+    }
+
     if global.__traveling_chests.count() == 0 {
-        return undefined;
+        return array_create(0);
     }
 
     var chests_to_store = array_create(global.__traveling_chests.count());
     for (var i = 0; i < global.__traveling_chests.count(); i++){
-        chests_to_store[i] = global.__traveling_chests.get(i).serialize();
+        if global.__traveling_chests.get(i) == undefined {
+            chests_to_store[i] = undefined;
+        } else {
+            chests_to_store[i] = global.__traveling_chests.get(i).serialize();
+        }
     }
     return chests_to_store;
 }
