@@ -244,7 +244,6 @@ function travel_chests_mod_place_guard(_ctx) {
                 node.child_grid = new Grid(region.x, region.y, _ctx.grid.location_id);
                 node.child_grid.parent_node = node;
 
-                //
                 for (var i = 0; i < _ctx.proto.size.x; i ++) {
                     for (var j = 0; j < _ctx.proto.size.y; j ++) {
                         grid_vec.offset.set_val(i - grid_vec.center.x, j - grid_vec.center.y);
@@ -277,7 +276,6 @@ function travel_chests_mod_place_guard(_ctx) {
                 if global.__traveling_chests.get(item.inner_item) == undefined {
                     mmapi_log_info("travel_chests", "chest inventory " + string(item.inner_item) + " does not exist");
                     mmapi_log_flush("travel_chests");
-                    return undefined;
                 }
 
                 node.inventory = global.__traveling_chests.get(item.inner_item);
