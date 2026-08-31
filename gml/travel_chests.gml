@@ -276,8 +276,6 @@ function travel_chests_mod_place_guard(_ctx) {
                 try {
                     node.inventory = global.__traveling_chests.get(item.inner_item);
 
-                    // default is undefined. may possibly update to store the icon later if that is wanted, 
-                    // but i didn't write the logic for that yet
                     if (item.inner_item == global.__traveling_chests.count() - 1) {
                         global.__traveling_chests.remove(item.inner_item);
                     } else {
@@ -291,6 +289,8 @@ function travel_chests_mod_place_guard(_ctx) {
                     node.inventory = new Inventory(NODE_PROTOTYPES[_ctx.grid.node_object_id[node_at_pos]].interaction_chest.inventory_size);
                 }
 
+                // default is undefined. may possibly update to store the icon later if that is wanted, 
+                // but i didn't write the logic for that yet
                 node.chest_icon = undefined;
 
                 if node.prototype.interaction_chest.allow_soulbound == false {
