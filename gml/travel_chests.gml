@@ -277,7 +277,7 @@ function travel_chests_mod_place_guard(_ctx) {
                 if global.__traveling_chests.get(item.inner_item) == undefined {
                     mmapi_log_info("travel_chests", "chest inventory " + string(item.inner_item) + " does not exist");
                     mmapi_log_flush("travel_chests");
-                    return false;
+                    return undefined;
                 }
 
                 node.inventory = global.__traveling_chests.get(item.inner_item);
