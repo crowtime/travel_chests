@@ -273,21 +273,25 @@ function travel_chests_mod_place_guard(_ctx) {
             if node.prototype.interaction_chest != undefined {
                 // if the inventory for this travel chest's inventory was lost, 
                 // writes a log and will not place the item
-                if global.__traveling_chests.get(item.inner_item) == undefined {
-                    mmapi_log_info("travel_chests", "chest inventory " + string(item.inner_item) + " does not exist");
+                try {
+                    node.inventory = global.__traveling_chests.get(item.inner_item);
+
+                    // default is undefined. may possibly update to store the icon later if that is wanted, 
+                    // but i didn't write the logic for that yet
+                    if (item.inner_item == global.__traveling_chests.count() - 1) {
+                        global.__traveling_chests.remove(item.inner_item);
+                    } else {
+                        global.__traveling_chests.set(item.inner_item, undefined);
+                    }
+                } catch (e) {
+                    mmapi_log_info("travel_chests", "errors: " + string(e) + ". chest inventory " 
+                        + string(item.inner_item) + " does not exist");
                     mmapi_log_flush("travel_chests");
+                    
+                    node.inventory = new Inventory(NODE_PROTOTYPES[_ctx.grid.node_object_id[node_at_pos]].interaction_chest.inventory_size);
                 }
 
-                node.inventory = global.__traveling_chests.get(item.inner_item);
-
-                // default is undefined. may possibly update to store the icon later if that is wanted, 
-                // but i didn't write the logic for that yet
-                node.chest_icon = undefined; 
-                if (item.inner_item == global.__traveling_chests.count() - 1) {
-                    global.__traveling_chests.remove(item.inner_item);
-                } else {
-                    global.__traveling_chests.set(item.inner_item, undefined);
-                }
+                node.chest_icon = undefined;
 
                 if node.prototype.interaction_chest.allow_soulbound == false {
                     node.inventory.slots.for_each(function(slot) {
